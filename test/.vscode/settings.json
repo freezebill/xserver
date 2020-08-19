@@ -1,9 +1,0 @@
-{
-    "Lua.diagnostics.globals": [
-        "_dofile",
-        "_app",
-        "_System",
-        "Error",
-        "_connect"
-    ]
-}

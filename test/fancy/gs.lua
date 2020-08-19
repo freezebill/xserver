@@ -1,7 +1,7 @@
 _G.GS = { }
 
 GS.key            = 'gameserver'
-GS.address        = '192.168.1.59:8888'
+GS.address        = '192.168.1.59:8888' -- 'localhost:8888'
 GS.connecttimeout = 5
 GS.registfunc     = { }
 
