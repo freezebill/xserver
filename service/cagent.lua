@@ -2,12 +2,18 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local json = require "json"
 local log = require "log"
+local player = require "player"
 
 local client_fd
 local gate
--- local REQUEST = require "crequest" -- from client
+
 local CMD = { }     -- from other
 local server = { }  -- local
+
+function server.send( fd, data )
+	local package = string.pack(">s2", json.encode( data ))
+	socket.write(fd, package)
+end
 
 skynet.register_protocol {
 	name = "client",
@@ -16,29 +22,30 @@ skynet.register_protocol {
     dispatch = function ( fd, _, msg )
         skynet.ignoreret()
         local info = json.decode( msg )
-		-- if REQUEST[info.k] then
-		-- 	REQUEST[info.k]( info.d )
-		-- else
-		-- 	log.warn( 'non-exist REQUEST:', info.k, info.d )
-		-- end
+
+		-- player.request( info )
 	end,
 }
 
+-- from clogin
 function CMD.login( fd, info )
-	client_fd = fd
+	-- TODO
+	player.new( info )
 
+	client_fd = fd
 	skynet.call( gate, "lua", "forward", fd )
 end
 
 function CMD.reconnect( fd, info )
-	client_fd = fd
+	-- TODO
 
+	client_fd = fd
 	skynet.call( gate, "lua", "forward", fd )
 end
 
+-- from cgate
 function CMD.socket_close( fd )
-	-- todo wait reconnect
-
+	-- TODO
 
 end
 
