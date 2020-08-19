@@ -1,3 +1,6 @@
 [submodule "skynet"]
 	path = skynet
 	url = https://github.com/cloudwu/skynet.git
+[submodule "test/unreal/sluaunreal"]
+	path = test/unreal/sluaunreal
+	url = https://github.com/Tencent/sluaunreal.git
