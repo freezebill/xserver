@@ -43,7 +43,8 @@ function handler.connect(fd, addr)
 		clogin = clogin[cloginnum],
 	}
 	connection[fd] = c
-	cloginnum = cloginnum + 1
+	cloginnum = (cloginnum + 1) > cloginmax and 1 or (cloginnum + 1)
+	print( 'connected gate and loginnum:'..cloginnum )
 	gateserver.openclient(fd)
 end
 

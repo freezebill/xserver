@@ -24,27 +24,28 @@ end
 
 function bo._tick( o, t )
     skynet.timeout( t, function()
-        if not bo._updating then return end
-        bo._tick( o, t )
+        if not bo._ticking or not  bo._ticking[t] then return end
 
+        bo._tick( o, t )
         o['tick'..t]( )
     end)
 end
 
 function bo.startTick( o, ... )
     bo._tickInterval = { ... }
-    bo._updating = true
+    bo._ticking = bo._ticking or { }
     for _, t in ipairs( bo._tickInterval ) do
         assert( t >= limitTickTime )
         assert( o['tick'..t] )
-
+        assert( bo._ticking[t] )
+        bo._ticking[t] = 1
         bo._tick( o, t )
     end
 end
 
 function bo.stopTick( )
     bo._tickInterval = nil
-    bo._updating = nil
+    bo._ticking = nil
     print( 'stop' , bo._updating )
 end
 
