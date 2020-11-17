@@ -1,0 +1,1 @@
+GS.send( 'starttick', nil )

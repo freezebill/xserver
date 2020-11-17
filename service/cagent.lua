@@ -8,44 +8,53 @@ local client_fd
 local gate
 
 local CMD = { }     -- from other
-local server = { }  -- local
+local server = { }	-- server function
 
-function server.send( fd, data )
+function server.send( data )
+	assert( client_fd )
+
 	local package = string.pack(">s2", json.encode( data ))
-	socket.write(fd, package)
+	socket.write(client_fd, package)
+end
+
+function server.dispatch( fd, _, msg )
+	skynet.ignoreret()
+	local data = json.decode( msg )
+	player.request( data.k, data.v )
 end
 
 skynet.register_protocol {
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
 	unpack = skynet.tostring,
-    dispatch = function ( fd, _, msg )
-        skynet.ignoreret()
-        local info = json.decode( msg )
-
-		-- player.request( info )
-	end,
+    dispatch = server.dispatch,
 }
 
 -- from clogin
 function CMD.login( fd, info )
 	-- TODO
-	player.new( info )
-
 	client_fd = fd
+
+	player:new( info, server )
+
 	skynet.call( gate, "lua", "forward", fd )
 end
 
 function CMD.reconnect( fd, info )
 	-- TODO
-
 	client_fd = fd
+
+	-- player.reconnect(  )
+
 	skynet.call( gate, "lua", "forward", fd )
 end
 
 -- from cgate
 function CMD.socket_close( fd )
 	-- TODO
+	player:clear( )
+
+	client_fd = nil
 
 end
 

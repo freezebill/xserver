@@ -1,65 +1,57 @@
 local skynet = require "skynet"
 
--- limit update time 0.01s
-local limitUpdateTime = 10
+-- limit tick time 0.01s
+local limitTickTime = 1
 
 -- weak table for memory leak
 local objWeakMap = { }
 setmetatable(objWeakMap, {__mode = "k"})
 
--- update time count
-local objUpdateTimeMax = { }
+-- tick time count
+local objTickTimeMax = { }
 
-local bo = { } -- base obj
+-- base obj
+local bo = { }
 
-function bo.new( ... )
-    if bo.onNew then bo.onNew( ... ) end
+function bo.new( o, ... )
+    if o.onNew then o.onNew( ... ) end
 end
 
-function bo.clear( ... )
-    bo.stopUpdate( )
-    if bo.onClear then bo.onClear( ... ) end
+function bo.clear( o, ... )
+    bo.stopTick( )
+    if o.onClear then o.onClear( ... ) end
 end
 
-function bo.startUpdate( ... )
-    bo._updateInterval = { ... }
-    bo._updateTimeCount = { }
-    for i, v in ipairs( bo._updateInterval ) do
-        -- bo._updateInterval[i] = bo._updateInterval[i] >= limitUpdateTime and bo._updateInterval[i] or limitUpdateTime
-        assert( v >= limitUpdateTime )
-        assert( bo['onUpdate'..v]( ) )
-        bo._updateTimeCount[i] = 0
-    end
-    bo._updating = true
+function bo._tick( o, t )
+    skynet.timeout( t, function()
+        if not bo._updating then return end
+        bo._tick( o, t )
 
-    skynet.fork(function()
-        local lastnow = skynet.now( )
-        while bo._updating do
-            local now = skynet.now( )
-
-            for i, v in ipairs( bo._updateInterval ) do
-                bo._updateTimeCount[i] = bo._updateTimeCount[i] + ( now - lastnow ) * 10
-                if bo._updateTimeCount[i] >= v then
-                    bo._updateTimeCount[i] = bo._updateTimeCount[i] - v
-                    bo['onUpdate'..v]( )
-                    -- local ok, err = skynet.pcall(bo.onUpdate, i)
-                end
-            end
-
-            objUpdateTimeMax[bo._objname] = math.max( objUpdateTimeMax[bo._objname] or 0, ( skynet.now( ) - now ) * 10 )
-            lastnow = now
-        end
+        o['tick'..t]( )
     end)
 end
 
-function bo.stopUpdate( )
-    bo._updateInterval = nil
-    bo._updateTimeCount = nil
-    bo._updating = nil
+function bo.startTick( o, ... )
+    bo._tickInterval = { ... }
+    bo._updating = true
+    for _, t in ipairs( bo._tickInterval ) do
+        assert( t >= limitTickTime )
+        assert( o['tick'..t] )
+
+        bo._tick( o, t )
+    end
 end
 
+function bo.stopTick( )
+    bo._tickInterval = nil
+    bo._updating = nil
+    print( 'stop' , bo._updating )
+end
+
+-- obj interface
 local obj = { }
-function obj.new( objname )
+
+function obj.init( objname )
     assert( objname )
     local o = { }
     setmetatable( o, bo )
@@ -69,7 +61,7 @@ function obj.new( objname )
     return o
 end
 
-function obj.info( )
+function obj.debug_info( )
     local s = ""
 
     s = s + "==========objnum==========\n"
@@ -82,13 +74,34 @@ function obj.info( )
     end
     s = s + "==========objnum==========\n"
 
-    s = s + "==========updatetimemax==========\n"
-    for k, v in pairs(objUpdateTimeMax) do
-        s = s + k + ":" + v + "\n"
-    end
-    s = s + "==========updatetimemax==========\n"
+    -- s = s + "==========ticktimemax==========\n"
+    -- for k, v in pairs(objTickTimeMax) do
+    --     s = s + k + ":" + v + "\n"
+    -- end
+    -- s = s + "==========ticktimemax==========\n"
 
     return s
 end
 
 return obj
+
+
+-- skynet.fork(function()
+--     local lastnow = skynet.now( )
+--     while bo._updating do
+--         local now = skynet.now( )
+
+--         for i, v in ipairs( bo._tickInterval ) do
+--             bo._tickTimeCount[i] = bo._tickTimeCount[i] + ( now - lastnow )
+--             if bo._tickTimeCount[i] >= v then
+--                 bo._tickTimeCount[i] = bo._tickTimeCount[i] - v
+--                 o['tick'..v]( )
+--                 -- local ok, err = skynet.pcall(bo.onTick, i)
+--                 print( 'loop' , bo._updating )
+--             end
+--         end
+
+--         objTickTimeMax[o._objname] = math.max( objTickTimeMax[o._objname] or 0, skynet.now( ) - now )
+--         lastnow = now
+--     end
+-- end)

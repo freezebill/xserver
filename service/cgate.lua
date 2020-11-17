@@ -27,10 +27,12 @@ function handler.message(fd, msg, sz)
 	local c = connection[fd]
 	if c.agent then
 		-- It's safe to redirect msg directly , gateserver framework will not free msg.
+		print( 'message agent' )
 		skynet.redirect(c.agent, 0, "client", fd, msg, sz)
 		return
 	end
 
+	print( 'message login' )
 	skynet.redirect(c.clogin, 0, "client", fd, msg, sz)
 end
 

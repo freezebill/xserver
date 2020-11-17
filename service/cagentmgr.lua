@@ -10,6 +10,7 @@ local CMD = { }
 local precreate = 20
 local preagent = { }
 
+local registingfds = { }
 local uid_serverid2agent = { }
 -- after init regist
 local fd2agent = { }
@@ -36,9 +37,10 @@ end
 -- from login service
 function CMD.login_success( fd, info ) -- fd, info
     -- unknown
-    if fd2agent[fd] then
+    if registingfds[fd] then
         return -201
     end
+    registingfds[fd] = 1
 
     -- reconnected
     if uid_serverid2agent[ info.uid .. '_' .. info.serverid ] then
@@ -61,6 +63,8 @@ end
 
 -- regist agent
 function CMD.regist_agent( agent, fd, uid, pid, name, serverid )
+    registingfds[fd] = nil
+
     if fd then fd2agent[fd] = agent end
     if uid then uid2agent[uid] = agent end
     if pid then pid2agent[pid] = agent end
@@ -76,7 +80,7 @@ skynet.start(function()
         if f then
             skynet.ret(skynet.pack(f(...)))
         else
-            skynet.error( 'no cmd:' .. cmd )
+            skynet.error( "no cmd:" .. cmd )
         end
     end)
 

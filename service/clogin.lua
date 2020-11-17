@@ -45,16 +45,16 @@ function server.login( fd, data )
     fd2info[fd] = data.d
     uid2fd[uid] = fd
 
-    -- simlulate http
+    -- simlulate http callback
     skynet.fork(function()
-        skynet.sleep(2500)
+        skynet.sleep(100)
         server.login_result( uid, 0 )
     end)
 end
 
 function server.login_result( uid, code )
     local fd = uid2fd[uid]
-    if fd then return end
+    assert( fd, uid )
     local info = fd2info[fd]
 
     uid2fd[uid] = nil

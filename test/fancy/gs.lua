@@ -1,7 +1,7 @@
 _G.GS = { }
 
 GS.key            = 'gameserver'
-GS.address        = '192.168.1.59:8888' -- 'localhost:8888'
+GS.address        = 'localhost:8888' -- 'localhost:8888'
 GS.connecttimeout = 5
 GS.registfunc     = { }
 
@@ -24,7 +24,7 @@ function GS.onReceive( data )
 end
 
 function GS.regist( k, func )
-    assert( GS.registfunc[k] == nil, 'registed:'..k )
+    -- assert( GS.registfunc[k] == nil, 'registed:'..k )
     GS.registfunc[k] = func
 end
 

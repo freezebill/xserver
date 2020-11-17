@@ -1,0 +1,1 @@
+GS.send( 'stoptick', 0 )
