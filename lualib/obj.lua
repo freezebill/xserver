@@ -5,7 +5,7 @@ local limitTickTime = 1
 
 -- weak table for memory leak
 local objWeakMap = { }
-setmetatable(objWeakMap, {__mode = "k"})
+setmetatable( objWeakMap, { __mode = "k" })
 
 -- tick time count
 local objTickTimeMax = { }
@@ -27,7 +27,10 @@ function bo._tick( o, t )
         if not bo._ticking or not  bo._ticking[t] then return end
 
         bo._tick( o, t )
+
+        local tt = skynet.now( )
         o['tick'..t]( )
+        objTickTimeMax[t] = math.max( ( objTickTimeMax[t] or 0 ), skynet.now( ) - tt )
     end)
 end
 
@@ -75,34 +78,13 @@ function obj.debug_info( )
     end
     s = s + "==========objnum==========\n"
 
-    -- s = s + "==========ticktimemax==========\n"
-    -- for k, v in pairs(objTickTimeMax) do
-    --     s = s + k + ":" + v + "\n"
-    -- end
-    -- s = s + "==========ticktimemax==========\n"
+    s = s + "==========ticktimemax==========\n"
+    for k, v in pairs(objTickTimeMax) do
+        s = s + k + ":" + v + "\n"
+    end
+    s = s + "==========ticktimemax==========\n"
 
     return s
 end
 
 return obj
-
-
--- skynet.fork(function()
---     local lastnow = skynet.now( )
---     while bo._updating do
---         local now = skynet.now( )
-
---         for i, v in ipairs( bo._tickInterval ) do
---             bo._tickTimeCount[i] = bo._tickTimeCount[i] + ( now - lastnow )
---             if bo._tickTimeCount[i] >= v then
---                 bo._tickTimeCount[i] = bo._tickTimeCount[i] - v
---                 o['tick'..v]( )
---                 -- local ok, err = skynet.pcall(bo.onTick, i)
---                 print( 'loop' , bo._updating )
---             end
---         end
-
---         objTickTimeMax[o._objname] = math.max( objTickTimeMax[o._objname] or 0, skynet.now( ) - now )
---         lastnow = now
---     end
--- end)
